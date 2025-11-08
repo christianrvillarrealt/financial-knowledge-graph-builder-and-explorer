@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enhanced Financial Knowledge Graph Explorer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .container {
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .dashboard {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 20px;
+        margin-bottom: 20px;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 2em;
+        font-weight: bold;
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        font-size: 0.9em;
+        opacity: 0.9;
+    }
+
+    .query-section {
+        margin-bottom: 25px;
+    }
+
+    .query-section h3 {
+        color: #333;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .search-box {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1em;
+        transition: all 0.3s;
+        resize: vertical;
+        min-height: 60px;
+    }
+
+    .search-box:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .button {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        margin-top: 10px;
+    }
+
+    .button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    .button:active {
+        transform: translateY(0);
+    }
+
+    .button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
+    .quick-queries {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .quick-query-btn {
+        padding: 10px;
+        background: #f5f5f5;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        text-align: left;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.9em;
+    }
+
+    .quick-query-btn:hover {
+        background: #e8e8ff;
+        border-color: #667eea;
+    }
+
+    #visualization {
+        min-height: 600px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .results-container {
+        margin-top: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+
+    .result-item {
+        padding: 12px;
+        background: #f8f9fa;
+        border-left: 4px solid #667eea;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        font-size: 0.9em;
+    }
+
+    .result-item strong {
+        color: #667eea;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .confidence-badge {
+        display: inline-block;
+        padding: 3px 8px;
+        background: #4caf50;
+        color: white;
+        border-radius: 12px;
+        font-size: 0.8em;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+    }
+
+    .spinner {
+        border: 3px solid #f3f3f3;
+        border-top: 3px solid #667eea;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .graph-node {
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8em;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.3s;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        padding: 10px;
+        word-wrap: break-word;
+        overflow: hidden;
+    }
+
+    .graph-node:hover {
+        transform: scale(1.1);
+        z-index: 10;
+    }
+
+    .graph-edge {
+        position: absolute;
+        height: 2px;
+        background: rgba(102, 126, 234, 0.3);
+        transform-origin: 0 0;
+        pointer-events: none;
+    }
+
+    .node-company {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .node-person {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .node-event {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .node-product {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .node-entity {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+    }
+
+    .legend {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        font-size: 0.8em;
+        z-index: 100;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+
+    .pipeline-status {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+        border-left: 4px solid #667eea;
+    }
+
+    .status-text {
+        font-size: 0.9em;
+        color: #666;
+        margin-bottom: 8px;
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: #e0e0e0;
+        border-radius: 3px;
+        margin: 8px 0;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: #4caf50;
+        border-radius: 3px;
+        width: 0%;
+        transition: width 0.3s;
+    }
+
+    .pipeline-message {
+        font-size: 0.8em;
+        color: #888;
+        margin-top: 5px;
+    }
+
+    .error-message {
+        color: #f44336;
+    }
+
+    .success-message {
+        color: #4caf50;
+    }
+
+    .refresh-btn {
+        background: #4caf50;
+        margin-bottom: 10px;
+    }
+
+    .refresh-btn:hover {
+        background: #45a049;
+    }
+
+    .query-info {
+        background: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 10px;
+        margin: 10px 0;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    /* NEW: Enhanced UI Elements */
+    .strategy-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        background: #ff9800;
+        color: white;
+        border-radius: 12px;
+        font-size: 0.7em;
+        font-weight: 600;
+        margin-left: 8px;
+    }
+
+    .analysis-section {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 15px;
+        margin: 10px 0;
+    }
+
+    .tab-container {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 15px;
+    }
+
+    .tab {
+        padding: 8px 16px;
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px 6px 0 0;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+
+    .tab.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .search-section {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 10px;
+        border: 2px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 0.9em;
+    }
+
+    .category-section {
+        margin-bottom: 20px;
+    }
+
+    .category-title {
+        font-weight: 600;
+        color: #555;
+        margin-bottom: 8px;
+        font-size: 0.95em;
+    }
+
+    .debug-info {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 0.8em;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .entity-search-result {
+        padding: 8px;
+        background: #f8f9fa;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+        margin: 5px 0;
+        font-size: 0.85em;
+    }
+
+    .suggestion-box {
+        background: #e8f5e8;
+        border: 1px solid #4caf50;
+        border-radius: 6px;
+        padding: 10px;
+        margin: 10px 0;
+        font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Automated Financial Knowledge Graph Builder & Explorer</h1>
+    <div class="dashboard">
+      <div class="panel">
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-value" id="nodeCount">0</div>
+            <div class="stat-label">Entities</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="relationCount">0</div>
+            <div class="stat-label">Relations</div>
+          </div>
+        </div>
+
+        <!-- Pipeline Controls -->
+        <div class="query-section">
+          <h3>🔄 Enhanced Pipeline Controls</h3>
+          <div class="pipeline-status">
+            <div class="status-text">Pipeline Status: <span id="statusText">Ready</span></div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressBar"></div>
+            </div>
+            <div class="pipeline-message" id="pipelineMessage">Enhanced multi-strategy system ready</div>
+          </div>
+          <button class="button" onclick="startPipeline()" id="pipelineBtn">🚀 Build Knowledge Graph</button>
+          <button class="button refresh-btn" onclick="refreshStats()">🔄 Refresh Stats</button>
+          <button class="button" onclick="showAllEntities()" id="showAllBtn" style="display: none; background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);">👁️ Show All Entities</button>
+        </div>
+
+        <!-- NEW: Search Section -->
+        <div class="query-section">
+          <h3>🔍 Entity Search</h3>
+          <div class="search-section">
+            <input type="text" class="search-input" id="entitySearch" placeholder="Search for companies, people...">
+            <button class="button" onclick="searchEntities()" style="width: auto; padding: 10px 15px;">Search</button>
+          </div>
+          <div id="searchResults"></div>
+        </div>
+
+        <!-- NEW: Query Analysis -->
+        <div class="query-section">
+          <h3>🔬 Query Analysis</h3>
+          <textarea class="search-box" id="analyzeQuery" rows="2" placeholder="Enter query to analyze without executing..."></textarea>
+          <button class="button" onclick="analyzeQuery()" style="background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);">Analyze Query</button>
+          <div id="analysisResults"></div>
+        </div>
+
+        <!-- Enhanced Query Section -->
+        <div class="query-section">
+          <h3>💬 Natural Language Query</h3>
+          <textarea class="search-box" id="nlQuery" rows="3" placeholder="Ask anything about companies, executives, investments..."></textarea>
+          <button class="button" onclick="executeQuery()">Search</button>
+        </div>
+
+        <!-- Enhanced Quick Queries with Categories -->
+        <div class="query-section">
+          <h3>⚡ Smart Query Categories</h3>
+          <div class="tab-container">
+            <div class="tab active" onclick="switchCategory('leadership')">Leadership</div>
+            <div class="tab" onclick="switchCategory('investment')">Investment</div>
+            <div class="tab" onclick="switchCategory('acquisition')">Acquisition</div>
+            <div class="tab" onclick="switchCategory('exploration')">Exploration</div>
+          </div>
+          <div class="quick-queries" id="quickQueries">
+            <!-- Dynamic content will be loaded here -->
+          </div>
+        </div>
+
+        <!-- NEW: Debug Section -->
+        <div class="query-section">
+          <h3>🔧 System Debug</h3>
+          <button class="button" onclick="showSchemaInfo()" style="background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);">Show Schema Info</button>
+          <div id="debugInfo"></div>
+        </div>
+
+        <div class="results-container" id="results">
+          <div class="result-item">
+            <strong>🎯 Enhanced Knowledge Graph Explorer</strong>
+            Features multi-strategy query generation, entity search, query analysis, and enhanced visualization. Build your knowledge graph and explore financial relationships.
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div id="visualization">
+          <div class="loading">
+            <div style="font-size:3em;">🌐</div>
+            <div>Enhanced Graph Visualization</div>
+            <div style="font-size:0.9em; margin-top:10px; color:#888;">Build the knowledge graph to see multi-strategy visualizations</div>
+          </div>
+        </div>
+        <!-- Legend -->
+        <div class="legend" id="legend" style="display: none;">
+          <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+            <span>Company</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+            <span>Person</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+            <span>Event</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);"></div>
+            <span>Product</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);"></div>
+            <span>Entity</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Global variables
+  let pipelinePollInterval = null;
+  let hasDisplayedInitialGraph = false;
+  let currentCategory = 'leadership';
+
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', function() {
+    loadGraphStats();
+    loadCategorizedExamples();
+    startPipelineStatusPolling();
+    checkAndDisplayInitialGraph();
+  });
+
+  // NEW: Switch between query categories
+  function switchCategory(category) {
+    currentCategory = category;
+    
+    // Update active tab
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    event.target.classList.add('active');
+    
+    // Load examples for this category
+    loadCategorizedExamples();
+  }
+
+  // NEW: Load categorized examples
+  async function loadCategorizedExamples() {
+    try {
+      const response = await fetch('/api/examples');
+      const data = await response.json();
+      
+      const container = document.getElementById('quickQueries');
+      
+      // Use the examples array from the response
+      const examples = data.examples || [];
+      
+      container.innerHTML = examples.map(example => 
+        `<button class="quick-query-btn" onclick="quickQuery('${example.replace(/'/g, "\\'")}')">${example}</button>`
+      ).join('');
+      
+    } catch (err) {
+      console.error('Error loading categorized examples:', err);
+      // Fallback examples
+      const fallbackExamples = [
+        "Find all companies mentioned in articles",
+        "Show me entities related to Apple",
+        "Find all articles from MarketWatch",
+        "Show me all persons who announced something",
+      ];
+      
+      const container = document.getElementById('quickQueries');
+      container.innerHTML = fallbackExamples.map(example => 
+        `<button class="quick-query-btn" onclick="quickQuery('${example.replace(/'/g, "\\'")}')">${example}</button>`
+      ).join('');
+    }
+  }
+
+  // NEW: Entity Search Functionality
+  async function searchEntities() {
+    const searchTerm = document.getElementById('entitySearch').value.trim();
+    if (!searchTerm) {
+      showSearchMessage('Please enter a search term', 'error');
+      return;
+    }
+
+    showSearchLoading();
+    try {
+      const response = await fetch('/api/search/entities', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({search_term: searchTerm})
+      });
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+      displaySearchResults(data);
+    } catch (err) {
+      console.error(err);
+      showSearchMessage(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  function showSearchLoading() {
+    document.getElementById('searchResults').innerHTML = `
+      <div class="loading" style="padding: 20px;">
+        <div class="spinner"></div>
+        <div>Searching entities...</div>
+      </div>`;
+  }
+
+  function showSearchMessage(message, type = 'info') {
+    const className = type === 'error' ? 'error-message' : '';
+    document.getElementById('searchResults').innerHTML = `
+      <div class="entity-search-result ${className}">
+        <strong>${type === 'error' ? 'Error' : 'Info'}:</strong> ${message}
+      </div>`;
+  }
+
+  function displaySearchResults(data) {
+    const resultsHTML = `
+      <div class="entity-search-result" style="background: #e8f5e8; border-color: #4caf50;">
+        <strong>Found ${data.total_found} entities for "${data.search_term}"</strong>
+      </div>
+      ${data.results ? data.results.map(entity => `
+        <div class="entity-search-result">
+          <strong>${entity.name}</strong> 
+          <span style="color: #666; font-size: 0.8em;">(${entity.entity_type || entity.labels?.join(', ') || 'Entity'})</span>
+          <br>
+          <small>Source: ${entity.source || 'Unknown'}</small>
+          ${entity.id ? `<br><small>ID: ${entity.id}</small>` : ''}
+        </div>
+      `).join('') : '<div class="entity-search-result">No results found</div>'}
+    `;
+    
+    document.getElementById('searchResults').innerHTML = resultsHTML;
+  }
+
+  // NEW: Query Analysis Functionality
+  async function analyzeQuery() {
+    const query = document.getElementById('analyzeQuery').value.trim();
+    if (!query) {
+      showAnalysisMessage('Please enter a query to analyze', 'error');
+      return;
+    }
+
+    showAnalysisLoading();
+    try {
+      const response = await fetch('/api/query/analyze', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query})
+      });
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+      displayAnalysisResults(data.analysis);
+    } catch (err) {
+      console.error(err);
+      showAnalysisMessage(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  function showAnalysisLoading() {
+    document.getElementById('analysisResults').innerHTML = `
+      <div class="loading" style="padding: 20px;">
+        <div class="spinner"></div>
+        <div>Analyzing query...</div>
+      </div>`;
+  }
+
+  function showAnalysisMessage(message, type = 'info') {
+    const className = type === 'error' ? 'error-message' : '';
+    document.getElementById('analysisResults').innerHTML = `
+      <div class="analysis-section ${className}">
+        <strong>${type === 'error' ? 'Error' : 'Info'}:</strong> ${message}
+      </div>`;
+  }
+
+  function displayAnalysisResults(analysis) {
+    const analysisHTML = `
+      <div class="analysis-section">
+        <strong>Query Analysis Results</strong>
+        <div style="margin-top: 10px;">
+          <strong>Generated Cypher:</strong>
+          <div style="font-family: monospace; font-size: 0.8em; background: #f5f5f5; padding: 8px; border-radius: 4px; margin-top: 5px;">
+            ${analysis.generated_cypher}
+          </div>
+        </div>
+        <div style="margin-top: 10px;">
+          <strong>Explanation:</strong> ${analysis.explanation}
+        </div>
+        <div style="margin-top: 10px;">
+          <strong>Return Type:</strong> ${analysis.return_type}
+        </div>
+      </div>
+    `;
+    
+    document.getElementById('analysisResults').innerHTML = analysisHTML;
+  }
+
+  // NEW: Schema Debug Information
+  async function showSchemaInfo() {
+    try {
+      const response = await fetch('/api/schema');
+      const data = await response.json();
+
+      if (data.error) throw new Error(data.error);
+      displaySchemaInfo(data);
+    } catch (err) {
+      console.error(err);
+      document.getElementById('debugInfo').innerHTML = `
+        <div class="debug-info error-message">
+          Error loading schema info: ${err.message}
+        </div>`;
+    }
+  }
+
+  function displaySchemaInfo(data) {
+    const schema = data.schema || {};
+    const schemaHTML = `
+      <div class="debug-info">
+        <strong>Schema Information</strong>
+        <div style="margin-top: 8px;">
+          <strong>Node Labels:</strong> ${schema.node_labels ? schema.node_labels.join(', ') : 'Loading...'}
+          <br><strong>Relationship Types:</strong> 
+          ${schema.common_relationship_types ? schema.common_relationship_types.slice(0, 5).join(', ') : 'Loading...'}
+        </div>
+        ${schema.example_queries ? `
+          <div style="margin-top: 8px;">
+            <strong>Example Queries:</strong>
+            ${schema.example_queries.slice(0, 3).map(q => `<br>• ${q}`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+    
+    document.getElementById('debugInfo').innerHTML = schemaHTML;
+  }
+
+  // Enhanced Query Execution
+  async function executeQuery() {
+    const query = document.getElementById("nlQuery").value.trim();
+    if (!query) {
+      showResultMessage('Please enter a query', 'error');
+      return;
+    }
+
+    showLoading();
+    try {
+      const res = await fetch("/api/query", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({query})
+      });
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+      visualizeGraph(data.nodes, data.edges);
+      displayEnhancedResults(data);
+    } catch (err) {
+      console.error(err);
+      showResultMessage(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  // Enhanced Results Display
+  function displayEnhancedResults(data) {
+    const resultsHTML = `
+      <div class="result-item">
+        <strong>Query Results</strong>
+        <div class="query-info">
+          <strong>Cypher Query:</strong> 
+          <div style="font-family: monospace; font-size: 0.8em; margin-top: 5px; background: #f5f5f5; padding: 8px; border-radius: 4px;">${data.cypher_query}</div>
+        </div>
+        <div class="query-info">
+          <strong>Reasoning:</strong> ${data.reasoning}
+        </div>
+      </div>
+      <div class="result-item">
+        <strong>Results (${data.nodes ? data.nodes.length : 0} entities):</strong>
+        ${data.success === false ? `<div class="suggestion-box">💡 Suggestion: ${data.suggestion || 'Try rephrasing your query'}</div>` : ''}
+      </div>
+      ${data.nodes && data.nodes.length > 0 ? data.nodes.map(node => `
+        <div class="result-item">
+          <strong>${node.label}</strong> (${node.type})
+          <br><small>Source: ${node.source || 'Unknown'}</small>
+          ${node.properties ? `<br><small>Properties: ${JSON.stringify(node.properties).slice(0, 100)}...</small>` : ''}
+        </div>
+      `).join('') : '<div class="result-item">No results found</div>'}
+    `;
+    
+    document.getElementById("results").innerHTML = resultsHTML;
+    
+    // Update stats with current query results
+    if (data.nodes) {
+      document.getElementById("nodeCount").textContent = data.nodes.length;
+    }
+  }
+
+  // NEW: Check if we should display the graph automatically
+  async function checkAndDisplayInitialGraph() {
+    try {
+      const response = await fetch('/api/graph/has_data');
+      const data = await response.json();
+      
+      if (data.has_data && !hasDisplayedInitialGraph) {
+        displayInitialGraph();
+        hasDisplayedInitialGraph = true;
+      }
+    } catch (err) {
+      console.error('Error checking graph data:', err);
+    }
+  }
+
+  // NEW: Display initial graph sample
+  async function displayInitialGraph() {
+    showLoading();
+    try {
+      const response = await fetch('/api/graph/sample');
+      const data = await response.json();
+      
+      if (data.error) throw new Error(data.error);
+      
+      visualizeGraph(data.nodes, data.edges);
+      displayEnhancedResults({
+        ...data,
+        nodes: data.nodes || [],
+        reasoning: "Displaying sample graph data"
+      });
+      
+      // Update welcome message
+      const resultsContainer = document.getElementById("results");
+      const welcomeHTML = `
+        <div class="result-item">
+          <strong>🎉 Enhanced Knowledge Graph Ready!</strong>
+          The pipeline has completed and your financial knowledge graph is now available.
+          ${data.nodes ? data.nodes.length : 0} entities loaded. Try the new search and analysis features!
+        </div>
+      `;
+      resultsContainer.innerHTML = welcomeHTML + resultsContainer.innerHTML;
+      
+    } catch (err) {
+      console.error('Error loading initial graph:', err);
+      showResultMessage('Graph data loaded but could not display sample', 'info');
+    }
+  }
+
+  // NEW: Function to show all entities
+  async function showAllEntities() {
+    showLoading();
+    try {
+      // Use the sample endpoint since we don't have a dedicated "all" endpoint
+      const response = await fetch('/api/graph/sample');
+      const data = await response.json();
+      
+      if (data.error) throw new Error(data.error);
+      visualizeGraph(data.nodes, data.edges);
+      displayEnhancedResults(data);
+    } catch (err) {
+      console.error(err);
+      showResultMessage(`Error: ${err.message}`, 'error');
+    }
+  }
+
+  // Pipeline Controls
+  async function startPipeline() {
+    const btn = document.getElementById('pipelineBtn');
+    btn.disabled = true;
+    btn.textContent = 'Building...';
+    hasDisplayedInitialGraph = false;
+    
+    try {
+      const response = await fetch('/api/pipeline/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          sample_size: 50,
+          run_ingestion: true
+        })
+      });
+      const data = await response.json();
+      
+      if (data.error) {
+        showPipelineError('Error: ' + data.error);
+      } else {
+        showPipelineMessage('Enhanced pipeline started successfully!', 'success');
+      }
+    } catch (err) {
+      showPipelineError('Failed to start pipeline: ' + err.message);
+    }
+  }
+
+  async function refreshStats() {
+    await loadGraphStats();
+    showPipelineMessage('Stats refreshed', 'success');
+  }
+
+  function startPipelineStatusPolling() {
+    pipelinePollInterval = setInterval(pollPipelineStatus, 2000);
+  }
+
+  async function pollPipelineStatus() {
+    try {
+      const response = await fetch('/api/pipeline/status');
+      const status = await response.json();
+      
+      updatePipelineUI(status);
+      
+      if (status.running) {
+        document.getElementById('pipelineBtn').disabled = true;
+        document.getElementById('pipelineBtn').textContent = `Building (Stage ${status.current_stage})`;
+      } else {
+        document.getElementById('pipelineBtn').disabled = false;
+        document.getElementById('pipelineBtn').textContent = '🚀 Build Knowledge Graph';
+        
+        if (status.progress === 100 && status.completed && !hasDisplayedInitialGraph) {
+          loadGraphStats();
+          showPipelineMessage('Enhanced pipeline completed successfully!', 'success');
+          
+          setTimeout(() => {
+            displayInitialGraph();
+            hasDisplayedInitialGraph = true;
+          }, 2000);
+        }
+      }
+    } catch (err) {
+      console.error('Error polling pipeline status:', err);
+    }
+  }
+
+  function updatePipelineUI(status) {
+    document.getElementById('statusText').textContent = 
+        status.running ? `Stage ${status.current_stage}: ${status.stage_name}` : 'Ready';
+    
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = status.progress + '%';
+    
+    const messageEl = document.getElementById('pipelineMessage');
+    messageEl.textContent = status.message;
+    
+    if (status.error) {
+      messageEl.className = 'pipeline-message error-message';
+      messageEl.textContent = 'Error: ' + status.error;
+    } else if (status.running) {
+      messageEl.className = 'pipeline-message';
+    } else if (status.progress === 100) {
+      messageEl.className = 'pipeline-message success-message';
+    } else {
+      messageEl.className = 'pipeline-message';
+    }
+  }
+
+  function showPipelineMessage(message, type = 'info') {
+    const messageEl = document.getElementById('pipelineMessage');
+    messageEl.textContent = message;
+    messageEl.className = `pipeline-message ${type === 'error' ? 'error-message' : type === 'success' ? 'success-message' : ''}`;
+  }
+
+  function showPipelineError(message) {
+    showPipelineMessage(message, 'error');
+  }
+
+  // Graph Stats
+  async function loadGraphStats() {
+    try {
+      const response = await fetch('/api/graph/stats');
+      const stats = await response.json();
+      
+      if (stats.error) {
+        console.error('Error loading stats:', stats.error);
+        return;
+      }
+      
+      document.getElementById('nodeCount').textContent = stats.node_count ? stats.node_count.toLocaleString() : '0';
+      document.getElementById('relationCount').textContent = stats.relationship_count ? stats.relationship_count.toLocaleString() : '0';
+      
+      // Show legend and "Show All" button if we have data
+      if (stats.node_count > 0) {
+        document.getElementById('legend').style.display = 'block';
+        document.getElementById('showAllBtn').style.display = 'block';
+      }
+    } catch (err) {
+      console.error('Error loading graph stats:', err);
+    }
+  }
+
+  function quickQuery(text) {
+    document.getElementById("nlQuery").value = text;
+    executeQuery();
+  }
+
+  function showLoading() {
+    document.getElementById("visualization").innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <div>Processing query with enhanced strategies...</div>
+      </div>`;
+  }
+
+  function showResultMessage(message, type = 'info') {
+    const resultsContainer = document.getElementById("results");
+    const className = type === 'error' ? 'error-message' : '';
+    resultsContainer.innerHTML = `<div class="result-item ${className}"><strong>${type === 'error' ? 'Error' : 'Info'}:</strong> ${message}</div>`;
+  }
+
+  // Graph Visualization
+  function visualizeGraph(nodes, edges) {
+    const viz = document.getElementById("visualization");
+    if (!nodes || nodes.length === 0) {
+      viz.innerHTML = `
+        <div class="loading">
+          <div style="font-size:3em;">🔍</div>
+          <div>No results found</div>
+          <div style="font-size:0.9em; margin-top:10px; color:#888;">Try a different query or use entity search</div>
+        </div>`;
+      return;
+    }
+
+    viz.innerHTML = "";
+    const width = viz.offsetWidth, height = viz.offsetHeight;
+    
+    const positions = calculateEnhancedNodePositions(nodes, edges, width, height);
+
+    // Draw edges if we have them
+    if (edges && edges.length > 0) {
+      edges.forEach(e => {
+        const f = positions[e.from], t = positions[e.to];
+        if (!f || !t) return;
+        
+        const dx = t.x - f.x, dy = t.y - f.y;
+        const len = Math.sqrt(dx*dx + dy*dy), ang = Math.atan2(dy, dx)*180/Math.PI;
+        
+        const edge = document.createElement("div");
+        edge.className = "graph-edge";
+        edge.style.width = len+"px";
+        edge.style.left = (f.x+40)+"px";
+        edge.style.top = (f.y+40)+"px";
+        edge.style.transform = `rotate(${ang}deg)`;
+        
+        viz.appendChild(edge);
+      });
+    }
+
+    // Draw nodes
+    nodes.forEach(n => {
+      const el = document.createElement("div");
+      const nodeType = n.type ? n.type.toLowerCase() : 'entity';
+      el.className = `graph-node node-${nodeType}`;
+      el.style.left = positions[n.id].x+"px";
+      el.style.top = positions[n.id].y+"px";
+      el.textContent = n.label;
+      
+      const tooltip = `${n.label} (${n.type})\nSource: ${n.source || 'Unknown'}`;
+      el.title = tooltip;
+      
+      el.onclick = function() {
+        alert(`Entity: ${n.label}\nType: ${n.type}\nSource: ${n.source || 'Unknown'}\nID: ${n.id || 'Unknown'}`);
+      };
+      
+      viz.appendChild(el);
+    });
+
+    document.getElementById('legend').style.display = 'block';
+  }
+
+  function calculateEnhancedNodePositions(nodes, edges, width, height) {
+    const positions = {};
+    const centerX = width / 2;
+    const centerY = height / 2;
+    
+    if (nodes.length === 0) return positions;
+    
+    if (nodes.length === 1) {
+      positions[nodes[0].id] = {x: centerX - 40, y: centerY - 40};
+    } else if (nodes.length <= 5) {
+      const radius = Math.min(width, height) * 0.3;
+      nodes.forEach((n, i) => {
+        const angle = (i / nodes.length) * 2 * Math.PI;
+        positions[n.id] = {
+          x: centerX + radius * Math.cos(angle) - 40,
+          y: centerY + radius * Math.sin(angle) - 40
+        };
+      });
+    } else {
+      const cols = Math.ceil(Math.sqrt(nodes.length));
+      const rows = Math.ceil(nodes.length / cols);
+      const cellWidth = width / (cols + 1);
+      const cellHeight = height / (rows + 1);
+      
+      nodes.forEach((n, i) => {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        positions[n.id] = {
+          x: (col + 1) * cellWidth - 40,
+          y: (row + 1) * cellHeight - 40
+        };
+      });
+    }
+    
+    return positions;
+  }
+
+  // Clean up on page unload
+  window.addEventListener('beforeunload', function() {
+    if (pipelinePollInterval) {
+      clearInterval(pipelinePollInterval);
+    }
+  });
+</script>
+</body>
+</html>
